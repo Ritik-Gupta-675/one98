@@ -28,6 +28,7 @@ const Navbar = () => {
     },
     { name: 'Courses', path: '/courses' },
     { name: 'Contact', path: '/contact' },
+    { name: 'Blog', path: '/blogsection' },
   ];
 
   return (

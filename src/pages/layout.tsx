@@ -1,7 +1,9 @@
 import Navbar from '../components/navbar/navbar';
-import HeroSection from '../components/hero/herosection';
+import HeroSection from '../components/home/herosection';
 import Footer from '../components/footer/footer';
 import ContactForm from '../components/contact/contact';
+import Testimonials from '../components/home/testimonials';
+import ClientSection from '../components/home/client';
 
 const Home = () => {
   return (
@@ -9,6 +11,8 @@ const Home = () => {
       <Navbar />
       <main className="flex-grow">
         <HeroSection />
+        <ClientSection />
+        <Testimonials />
         <ContactForm />
         {/* Add more sections here */}
       </main>
