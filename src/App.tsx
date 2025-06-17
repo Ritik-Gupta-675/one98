@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
-import Home from './pages/home';
+import Home from './pages/layout';
+import BlogSection from './pages/blogsection/section';
 
 // Placeholder components for routes
 const About = () => <div className="min-h-screen pt-20 px-4">About Us</div>;
@@ -21,6 +22,7 @@ function App() {
           <Route path="/services/3" element={<div className="min-h-screen pt-20 px-4">Service 3</div>} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/blogsection" element={<BlogSection />} />
         </Routes>
       </div>
     </Router>
