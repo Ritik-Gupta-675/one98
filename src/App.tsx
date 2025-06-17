@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
-import Home from './Home/home';
+import Home from './pages/home';
 
 // Placeholder components for routes
 const About = () => <div className="min-h-screen pt-20 px-4">About Us</div>;

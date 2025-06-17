@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import logo from '../../../assets/logo.png';
+import logo from '../../assets/logo.png';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,7 +37,7 @@ const Navbar = () => {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link to="/" className="flex items-center">
-              <img src={logo} alt="Logo" className="w-30 h-16" />
+              < img src={logo} alt="Logo" className="w-30 h-16" />
             </Link>
           </div>
 
