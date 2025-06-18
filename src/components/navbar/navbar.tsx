@@ -48,26 +48,33 @@ const Navbar = () => {
               <div key={item.name} className="relative group">
                 {item.dropdown ? (
                   <div className="relative">
-                    <button
-                      onClick={toggleDropdown}
-                      className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
-                    >
-                      {item.name}
-                      <svg
-                        className="ml-1 h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
+                    <div className="flex items-center">
+                      <Link
+                        to={item.path}
+                        className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </button>
+                        {item.name}
+                      </Link>
+                      <button
+                        onClick={toggleDropdown}
+                        className="text-gray-700 hover:text-blue-600 px-1 py-2 rounded-md focus:outline-none"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                     {isDropdownOpen && (
                       <div className="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                         <div className="py-1">

@@ -1,125 +1,128 @@
-const Blogs = () => {
-  // Sample blog data - replace with your actual data
-  const featuredPost = {
-    id: 1,
-    title: 'The Future of Web Development in 2024',
-    excerpt: 'Exploring the latest trends and technologies shaping the future of web development.',
-    date: 'June 15, 2024',
-    author: 'John Doe',
-    category: 'Technology',
-    readTime: '5 min read',
-    image: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80',
-  };
+import { Link } from 'react-router-dom';
 
-  const recentPosts = [
+interface Blog {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  metadata: string;
+  imageUrl: string;
+  alt: string;
+  createdAt: string;
+}
+
+const Blogs = () => {
+  // Sample blog data - in a real app, this would come from an API
+  const blogs: Blog[] = [
     {
-      id: 2,
-      title: 'Getting Started with React Hooks',
-      excerpt: 'Learn how to use React Hooks to simplify your components and reuse stateful logic.',
-      date: 'June 10, 2024',
-      category: 'React',
-      readTime: '4 min read',
+      id: '1',
+      title: 'Getting Started with Next.js',
+      slug: 'getting-started-with-nextjs',
+      content: 'Learn the basics of Next.js and how to build modern web applications with it.',
+      metadata: '5 min read • Web Development',
+      imageUrl: '/images/blog1.jpg',
+      alt: 'Next.js Introduction',
+      createdAt: '2023-05-15T10:30:00Z',
     },
     {
-      id: 3,
-      title: 'Mastering Tailwind CSS',
-      excerpt: 'Advanced techniques and best practices for working with Tailwind CSS in your projects.',
-      date: 'June 5, 2024',
-      category: 'CSS',
-      readTime: '6 min read',
+      id: '2',
+      title: 'Mastering React Hooks',
+      slug: 'mastering-react-hooks',
+      content: 'A comprehensive guide to understanding and using React Hooks effectively.',
+      metadata: '7 min read • React',
+      imageUrl: '/images/blog2.jpg',
+      alt: 'React Hooks',
+      createdAt: '2023-05-10T14:20:00Z',
+    },
+    {
+      id: '3',
+      title: 'CSS Grid Layout Guide',
+      slug: 'css-grid-layout-guide',
+      content: 'Learn how to create complex layouts with CSS Grid.',
+      metadata: '6 min read • CSS',
+      imageUrl: '/images/blog3.jpg',
+      alt: 'CSS Grid Layout',
+      createdAt: '2023-05-05T09:15:00Z',
+    },
+    {
+      id: '4',
+      title: 'TypeScript Best Practices',
+      slug: 'typescript-best-practices',
+      content: 'Best practices and patterns for writing clean and maintainable TypeScript code.',
+      metadata: '8 min read • TypeScript',
+      imageUrl: '/images/blog4.jpg',
+      alt: 'TypeScript',
+      createdAt: '2023-04-28T16:45:00Z',
     },
   ];
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="relative h-96 w-full overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src={featuredPost.image}
-            alt={featuredPost.title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="text-white text-center px-4 max-w-4xl mx-auto">
-              <span className="inline-block bg-blue-600 text-white text-sm font-semibold px-3 py-1 rounded-full mb-4">
-                {featuredPost.category}
-              </span>
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">{featuredPost.title}</h1>
-              <p className="text-xl mb-6">{featuredPost.excerpt}</p>
-              <div className="flex items-center justify-center space-x-4 text-sm">
-                <span>{featuredPost.author}</span>
-                <span>•</span>
-                <span>{featuredPost.date}</span>
-                <span>•</span>
-                <span>{featuredPost.readTime}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  // Sort blogs by date (newest first)
+  const sortedBlogs = [...blogs].sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Main Content Area */}
-          <main className="w-full lg:w-2/3">
-            {/* Featured Post */}
-            <article className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+  return (
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="container mx-auto px-4">
+        {/* Page Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Our Blog</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Latest articles, tutorials, and insights from our team
+          </p>
+        </div>
+
+        {/* Blog Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {sortedBlogs.map((blog) => (
+            <Link 
+              key={blog.id} 
+              to={`/blog/${blog.slug}`}
+              className="group block bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+            >
+              <div className="h-48 overflow-hidden">
+                <img
+                  src={blog.imageUrl}
+                  alt={blog.alt}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
               <div className="p-6">
-                <h2 className="text-2xl font-bold mb-4">Featured Post</h2>
-                <div className="prose max-w-none">
-                  <p className="text-gray-700 mb-4">
-                    This is where the main content of the featured blog post will go. You can add your blog content here, 
-                    including text, images, code snippets, and other rich media elements.
-                  </p>
-                  <p className="text-gray-700 mb-6">
-                    The layout is fully responsive and will adapt to different screen sizes. On larger screens, 
-                    the sidebar will appear to the right of the main content.
-                  </p>
-                  <a 
-                    href="#" 
-                    className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                <div className="flex items-center text-sm text-gray-500 mb-2">
+                  <span>{new Date(blog.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}</span>
+                  <span className="mx-2">•</span>
+                  <span>{blog.metadata}</span>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  {blog.title}
+                </h2>
+                <p className="text-gray-600 line-clamp-3">
+                  {blog.content}
+                </p>
+                <div className="mt-4 flex items-center text-blue-600 font-medium group-hover:text-blue-700 transition-colors">
+                  Read more
+                  <svg
+                    className="w-4 h-4 ml-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    Read More
-                  </a>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M14 5l7 7m0 0l-7 7m7-7H3"
+                    />
+                  </svg>
                 </div>
               </div>
-            </article>
-
-            {/* Recent Posts */}
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold mb-6">Recent Posts</h2>
-              <div className="grid md:grid-cols-2 gap-6">
-                {recentPosts.map((post) => (
-                  <article key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div className="p-6">
-                      <span className="inline-block bg-gray-200 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2">
-                        {post.category}
-                      </span>
-                      <h3 className="text-xl font-bold mb-2">{post.title}</h3>
-                      <p className="text-gray-600 mb-4">{post.excerpt}</p>
-                      <div className="flex items-center justify-between text-sm text-gray-500">
-                        <span>{post.date}</span>
-                        <span>{post.readTime}</span>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-          </main>
-
-          {/* Sidebar - Empty for now */}
-          <aside className="w-full lg:w-1/3">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-xl font-bold mb-4">Sidebar</h3>
-              <p className="text-gray-600">
-                This is where you can add your sidebar content, such as categories, tags, about section, 
-                or any other widgets you'd like to include.
-              </p>
-            </div>
-          </aside>
+            </Link>
+          ))}
         </div>
       </div>
     </div>

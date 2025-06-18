@@ -8,6 +8,10 @@ import BlogSection from './app/pages/blogsection/section';
 import CreateArticlePage from './app/Dashboard/articles/create';
 import Dashboard from './app/Dashboard/layout';
 import Contact from './app/pages/contactus';
+import ServicesPage from './app/pages/services/page';
+import TechServicesPage from './app/pages/services/tech-services';
+import ContentServicesPage from './app/pages/services/content-services';
+import BusinessServicesPage from './app/pages/services/business-services';
 
 // Layout component that includes Navbar and Footer
 const MainLayout = () => (
@@ -21,7 +25,6 @@ const MainLayout = () => (
 );
 
 // Placeholder components for routes  
-const Services = () => <div className="min-h-screen pt-20 px-4">Services</div>;
 const Courses = () => <div className="min-h-screen pt-20 px-4">Courses</div>;
 
 function App() {
@@ -33,10 +36,10 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/aboutus" element={<About />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/services/1" element={<div className="min-h-screen pt-20 px-4">Service 1</div>} />
-            <Route path="/services/2" element={<div className="min-h-screen pt-20 px-4">Service 2</div>} />
-            <Route path="/services/3" element={<div className="min-h-screen pt-20 px-4">Service 3</div>} />
+            <Route path="/services" element={<ServicesPage />} />
+            <Route path="/services/1" element={<TechServicesPage />} />
+            <Route path="/services/2" element={<ContentServicesPage />} />
+            <Route path="/services/3" element={<BusinessServicesPage />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/blogsection" element={<BlogSection />} />
