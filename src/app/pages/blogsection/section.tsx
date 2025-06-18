@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import BlogCard from "../../components/Blogs/card";
+import BlogCard from "../../../components/Blogs/card";
 
 interface Blog {
   id: string;
