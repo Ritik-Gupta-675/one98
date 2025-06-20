@@ -7,12 +7,13 @@ import About from './app/pages/aboutus';
 import BlogSection from './app/pages/blogsection/section';
 import CreateArticlePage from './app/Dashboard/articles/create';
 import Dashboard from './app/Dashboard/layout';
+import DashboardPage from './app/Dashboard/page';
 import Contact from './app/pages/contactus';
 import ServicesPage from './app/pages/services/page';
 import TechServicesPage from './app/pages/services/tech-services';
 import ContentServicesPage from './app/pages/services/content-services';
 import BusinessServicesPage from './app/pages/services/business-services';
-
+// import AdminLogin from './app/pages/admin-login';
 // Layout component that includes Navbar and Footer
 const MainLayout = () => (
   <div className="min-h-screen flex flex-col">
@@ -47,8 +48,9 @@ function App() {
           </Route>
           
           {/* Dashboard routes without Navbar/Footer */}
-          <Route path="/dashboard" element={<Dashboard children={<CreateArticlePage />} />} />
-          <Route path="/dashboard/articles/create" element={<CreateArticlePage />} />
+          <Route path="/dashboard" element={<Dashboard><DashboardPage /></Dashboard>} />
+          <Route path="/dashboard/articles/create" element={<Dashboard><CreateArticlePage /></Dashboard>} />
+          {/* <Route path="/dashboard/admin-login" element={<AdminLogin />} /> */}
         </Routes>
       </div>
     </Router>
