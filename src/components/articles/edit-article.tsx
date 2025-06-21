@@ -1,58 +1,114 @@
-"use client";
-import { useState } from "react";
-import type { FormEvent } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import TiptapEditor from "@/components/ui/tiptapeditor";
+import axios from "axios";
+import { env } from "../../config/env";
 
+// Wrapper component to handle route parameters
+const EditArticlePageWrapper = () => {
+  const { id } = useParams<{ id: string }>();
+  const [article, setArticle] = useState<Article | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchArticle = async () => {
+      if (!id) return;
+      try {
+        const response = await axios.get(`${env.API}/articles/${id}`);
+        setArticle(response.data);
+      } catch (error) {
+        console.error('Error fetching article:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchArticle();
+  }, [id]);
+  
+  if (!id) {
+    return <div>No article ID provided</div>;
+  }
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  if (!article) {
+    return <div>Article not found</div>;
+  }
+  
+  return <EditArticlePage id={id} article={article} />;
+};
 
-type Article = {
+interface Article {
   id: string;
   title: string;
   content: string;
-  category?: string;
-  featuredImage?: string;
-  status: 'draft' | 'published' | 'archived';
-  createdAt: string | Date;
-  updatedAt?: string | Date;
-  author: {
-    name: string;
-    email: string;
-    imageUrl?: string;
-  };
-};
+  category: string;
+  // Add other article properties as needed
+}
 
-type EditPropsPage = {
+interface EditArticlePageProps {
+  id: string;
   article: Article;
-};
+}
 
-const EditArticlePage: React.FC<EditPropsPage> = ({ article }) => {
-  const [content, setContent] = useState<string>(article.content);
+const EditArticlePage = ({ id, article }: EditArticlePageProps) => {
+  const navigate = useNavigate();
+
+  const [title, setTitle] = useState(article?.title || "");
+  const [category, setCategory] = useState(article?.category || "");
+  const [content, setContent] = useState(article?.content || "");
+  const [featuredImage, setFeaturedImage] = useState<File | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  useEffect(() => {
+    async function fetchArticle() {
+      const res = await axios.get(`${env.API}/articles/${id}`);
+      const data = res.data;
+      setTitle(data.title);
+      setCategory(data.category);
+      setContent(data.content);
+      setExistingImageUrl(data.featuredImage);
+    }
+    fetchArticle();
+  }, [id]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
-    setErrors({});
 
     try {
-      const formData = new FormData(event.currentTarget);
-      formData.append("content", content);
+      let imageUrl = existingImageUrl;
 
-      // Here you would typically make an API call to update the article
-      console.log("Form data:", Object.fromEntries(formData.entries()));
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Handle success
+      if (featuredImage) {
+        const imageFormData = new FormData();
+        imageFormData.append("featuredImage", featuredImage);
+
+        const uploadRes = await axios.post(env.API + "/upload", imageFormData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        imageUrl = uploadRes.data.url;
+      }
+
+      await axios.put(`${env.API}/articles/${id}`, {
+        title,
+        category,
+        content,
+        imageUrl,
+      });
+
       alert("Article updated successfully!");
+      navigate("/admin/articles"); // or your article list route
     } catch (error) {
-      console.error("Error updating article:", error);
-      setErrors({ form: "Failed to update article. Please try again." });
+      console.error("Failed to update article:", error);
+      alert("Failed to update. Try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -67,96 +123,36 @@ const EditArticlePage: React.FC<EditPropsPage> = ({ article }) => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="title">Article Title</Label>
-              <Input
-                id="title"
-                name="title"
-                defaultValue={article.title}
-                placeholder="Enter article title"
-                required
-              />
-              {errors.title && (
-                <span className="font-medium text-sm text-red-500">
-                  {errors.title}
-                </span>
-              )}
+              <Label>Article Title</Label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <select
-                id="category"
-                name="category"
-                defaultValue={article.category || ""}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                required
-              >
+              <Label>Category</Label>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full border px-3 py-2">
                 <option value="">Select Category</option>
                 <option value="technology">Technology</option>
                 <option value="programming">Programming</option>
                 <option value="web-development">Web Development</option>
               </select>
-              {errors.category && (
-                <span className="font-medium text-sm text-red-500">
-                  {errors.category}
-                </span>
-              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="featuredImage">Featured Image</Label>
-              {article.featuredImage && (
-                <div className="mb-4">
-                  <img
-                    src={article.featuredImage}
-                    alt="Current featured"
-                    width={192}
-                    height={128}
-                    className="object-cover rounded-md"
-                  />
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Current featured image
-                  </p>
-                </div>
+              <Label>Featured Image</Label>
+              {existingImageUrl && (
+                <img src={existingImageUrl} alt="Current" className="h-32 object-cover" />
               )}
-              <Input
-                id="featuredImage"
-                name="featuredImage"
-                type="file"
-                accept="image/*"
-              />
-              {errors.featuredImage && (
-                <span className="font-medium text-sm text-red-500">
-                  {errors.featuredImage}
-                </span>
-              )}
+              <Input type="file" accept="image/*" onChange={(e) => setFeaturedImage(e.target.files?.[0] || null)} />
             </div>
 
             <div className="space-y-2">
               <Label>Content</Label>
-              <TiptapEditor 
-                content={content} 
-                onChange={(newContent: string) => setContent(newContent)} 
-              />
-              {errors.content && (
-                <span className="font-medium text-sm text-red-500">
-                  {errors.content}
-                </span>
-              )}
+              <TiptapEditor content={content} onChange={setContent} />
             </div>
 
-            {errors.form && (
-              <div className="text-red-500 text-sm mt-2">
-                {errors.form}
-              </div>
-            )}
-
             <div className="flex justify-end gap-4">
-              <Button type="button" variant="outline" disabled={isSubmitting}>
-                Discard Changes
-              </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Update Article"}
+                {isSubmitting ? "Updating..." : "Update Article"}
               </Button>
             </div>
           </form>
@@ -164,6 +160,7 @@ const EditArticlePage: React.FC<EditPropsPage> = ({ article }) => {
       </Card>
     </div>
   );
-};
+}
 
-export default EditArticlePage;
+// Export both components
+export { EditArticlePageWrapper as default, EditArticlePage };
