@@ -2,7 +2,10 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
-// Using regular img tag since this is a Vite project
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { Skeleton } from "@/components/ui/skeleton";
+import { env } from "../../config/env";
 
 interface Comment {
   id: string;
@@ -31,59 +34,59 @@ interface Article {
 }
 
 export function TopArticles() {
-  let articles: Article[] = [];
-  
-  // Mock data for articles
-  articles = [
-    {
-      id: '1',
-      title: 'Getting Started with React',
-      category: 'Web Development',
-      featuredImage: 'https://source.unsplash.com/random/800x400?react',
-      author: {
-        name: 'Jane Doe',
-        email: 'jane@example.com',
-        imageUrl: 'https://i.pravatar.cc/150?img=1'
-      },
-      createdAt: new Date('2025-06-15'),
-      updatedAt: new Date('2025-06-15'),
-      content: 'Learn the basics of React and start building modern web applications.',
-      slug: 'getting-started-with-react',
-      comments: []
-    },
-    {
-      id: '2',
-      title: 'Mastering TypeScript',
-      category: 'Programming',
-      featuredImage: 'https://source.unsplash.com/random/800x400?typescript',
-      author: {
-        name: 'John Smith',
-        email: 'john@example.com',
-        imageUrl: 'https://i.pravatar.cc/150?img=2'
-      },
-      createdAt: new Date('2025-06-10'),
-      updatedAt: new Date('2025-06-10'),
-      content: 'Take your TypeScript skills to the next level with these advanced patterns.',
-      slug: 'mastering-typescript',
-      comments: []
-    },
-    {
-      id: '3',
-      title: 'The Future of Web Development',
-      category: 'Technology',
-      featuredImage: 'https://source.unsplash.com/random/800x400?web',
-      author: {
-        name: 'Alex Johnson',
-        email: 'alex@example.com',
-        imageUrl: 'https://i.pravatar.cc/150?img=3'
-      },
-      createdAt: new Date('2025-06-05'),
-      updatedAt: new Date('2025-06-05'),
-      content: 'Exploring the latest trends and technologies shaping the future of web development.',
-      slug: 'future-of-web-development',
-      comments: []
-    }
-  ];
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const response = await axios.get(`${env.API}/articles`, {
+          params: {
+            limit: 3,
+            sort: 'createdAt:desc'
+          }
+        });
+        setArticles(response.data);
+      } catch (err) {
+        console.error('Error fetching articles:', err);
+        setError('Failed to load articles. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArticles();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i} className="p-6">
+            <Skeleton className="h-48 w-full mb-4" />
+            <Skeleton className="h-6 w-3/4 mb-2" />
+            <Skeleton className="h-4 w-1/2 mb-4" />
+            <div className="flex items-center space-x-2">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div>
+                <Skeleton className="h-4 w-24 mb-1" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-center text-red-500 p-4">{error}</div>;
+  }
+
+  if (articles.length === 0) {
+    return <div className="text-center text-gray-500 p-4">No articles found.</div>;
+  }
 
   return (
     <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
