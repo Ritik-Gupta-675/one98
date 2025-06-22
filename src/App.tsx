@@ -48,8 +48,6 @@ function App() {
           </Route>
           
           {/* Dashboard routes without Navbar/Footer */}
-          <Route path="/dashboard" element={<Dashboard children={<CreateArticlePage />} />} />
-          <Route path="/dashboard/articles/create" element={<CreateArticlePage />} />
           <Route path="/dashboard" element={<Dashboard><DashboardPage /></Dashboard>} />
           <Route path="/dashboard/articles/create" element={<Dashboard><CreateArticlePage /></Dashboard>} />
           <Route path="/dashboard/articles/edit/:id" element={<Dashboard><EditArticlePageWrapper /></Dashboard>} />
