@@ -26,7 +26,6 @@ const Navbar = () => {
         { name: 'Service 3', path: '/services/3' },
       ]
     },
-    { name: 'Courses', path: '/courses' },
     { name: 'Contact', path: '/contact' },
     { name: 'Blog', path: '/blogsection' },
   ];
@@ -38,7 +37,7 @@ const Navbar = () => {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link to="/" className="flex items-center">
-              < img src={logo} alt="Logo" className="w-30 h-16" />
+              < img src={logo} alt="Logo" className="w-40 h-16" />
             </Link>
           </div>
 
