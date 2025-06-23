@@ -53,7 +53,10 @@ const ClientSection = () => {
                     className="max-w-full max-h-full object-contain"
                     onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = '/images/placeholder-logo.png';
+                      // Only set placeholder if current src is not already the placeholder
+                      if (!target.src.endsWith('/images/placeholder-logo.png')) {
+                        target.src = '/images/placeholder-logo.png';
+                      }
                     }}
                   />
                 </div>
