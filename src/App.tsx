@@ -4,7 +4,7 @@ import Navbar from './components/navbar/navbar';
 import Footer from './components/footer/footer';
 import Home from './app/pages/layout';
 import About from './app/pages/aboutus';
-import BlogSection from './app/pages/blogsection/section';
+import BlogSection from './app/pages/articles-section/section';
 import CreateArticlePage from './app/Dashboard/articles/create';
 import Dashboard from './app/Dashboard/layout';
 import DashboardPage from './app/Dashboard/page';
@@ -14,6 +14,7 @@ import TechServicesPage from './app/pages/services/tech-services';
 import ContentServicesPage from './app/pages/services/content-services';
 import BusinessServicesPage from './app/pages/services/business-services';
 import EditArticlePageWrapper from './components/articles/edit-article';
+import ArticlePage from './app/pages/articles-section/articles/article';
 // Layout component that includes Navbar and Footer
 const MainLayout = () => (
   <div className="min-h-screen flex flex-col">
@@ -45,6 +46,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/blogsection" element={<BlogSection />} />
             <Route path="/contactus" element={<Contact />} />
+            <Route path="/articles/:id" element={<ArticlePage />} />
           </Route>
           
           {/* Dashboard routes without Navbar/Footer */}

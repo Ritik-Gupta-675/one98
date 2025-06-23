@@ -1,11 +1,11 @@
 import { Card } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
 import { env } from "../../config/env";
+import { ArrowRight } from "lucide-react";
 
 interface Comment {
   id: string;
@@ -47,7 +47,10 @@ export function TopArticles() {
             sort: 'createdAt:desc'
           }
         });
-        setArticles(response.data);
+        const articlesData = Array.isArray(response.data) 
+          ? response.data 
+          : response.data?.data || [];
+        setArticles(articlesData);
       } catch (err) {
         console.error('Error fetching articles:', err);
         setError('Failed to load articles. Please try again later.');
@@ -61,85 +64,116 @@ export function TopArticles() {
 
   if (loading) {
     return (
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i} className="p-6">
-            <Skeleton className="h-48 w-full mb-4" />
-            <Skeleton className="h-6 w-3/4 mb-2" />
-            <Skeleton className="h-4 w-1/2 mb-4" />
-            <div className="flex items-center space-x-2">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div>
-                <Skeleton className="h-4 w-24 mb-1" />
-                <Skeleton className="h-3 w-16" />
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <Skeleton className="h-10 w-1/3 mx-auto mb-12" />
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <Skeleton className="h-48 w-full" />
+              <div className="p-6">
+                <Skeleton className="h-6 w-24 mb-4" />
+                <Skeleton className="h-5 w-full mb-2" />
+                <Skeleton className="h-5 w-5/6 mb-4" />
+                <Skeleton className="h-4 w-3/4 mb-6" />
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-4" />
+                </div>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
 
   if (error) {
-    return <div className="text-center text-red-500 p-4">{error}</div>;
+    return (
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center text-red-500 p-8 bg-red-50 rounded-lg">
+          {error}
+        </div>
+      </div>
+    );
   }
 
   if (articles.length === 0) {
-    return <div className="text-center text-gray-500 p-4">No articles found.</div>;
+    return (
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center text-gray-500 p-8 bg-gray-50 rounded-lg">
+          No articles found.
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-      {articles.slice(0, 3).map((article) => (
-        <Card
-          key={article.id}
-          className={cn(
-            "group relative overflow-hidden transition-all hover:scale-[1.02]",
-            "border border-gray-200/50 dark:border-white/10",
-            "bg-white/50 dark:bg-gray-900/50 backdrop-blur-lg"
-          )}
-        >
-          <div className="p-6">
-            <Link to={`/articles/${article.id}`}>
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">
+        News and Blog Being Solution
+      </h2>
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {articles.slice(0, 3).map((article) => (
+          <Card
+            key={article.id}
+            className={cn(
+              "group relative overflow-hidden transition-all duration-300 hover:shadow-lg",
+              "border border-gray-200",
+              "bg-white",
+              "h-full flex flex-col"
+            )}
+          >
+            <Link to={`/articles/${article.id}`} className="flex flex-col h-full">
               {/* Image Container */}
-              <div className="relative mb-4 h-48 w-full overflow-hidden rounded-xl">
-                {article.featuredImage && (
+              <div className="w-full h-48 overflow-hidden">
+                {article.featuredImage ? (
                   <img
                     src={article.featuredImage}
                     alt={article.title}
-                    className="w-full h-48 object-cover rounded-t-lg"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-400">No Image</span>
+                  </div>
                 )}
               </div>
 
-              {/* Author Info */}
-              <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={article.author.imageUrl as string} />
-                  <AvatarFallback>
-                    {article.author?.name || 'Unknown Author'}
-                  </AvatarFallback>
-                </Avatar>
-                <span>{article.author?.name || 'Unknown Author'}</span>
-              </div>
+              <div className="p-6 flex-1 flex flex-col">
+                {/* Category */}
+                {article.category && (
+                  <span className="inline-block px-3 py-1 text-xs font-semibold text-blue-600 bg-blue-50 rounded-full mb-3 self-start">
+                    {article.category}
+                  </span>
+                )}
 
-              {/* Article Title */}
-              <h3 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">
-                {article.title}
-              </h3>
-              <p className="mt-2 text-gray-600 dark:text-gray-300">
-                {article.category || 'Uncategorized'}
-              </p>
+                {/* Article Title */}
+                <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2">
+                  {article.title}
+                </h3>
 
-              {/* Article Meta Info */}
-              <div className="mt-6 flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span>{new Date(article.createdAt).toDateString()}</span>
-                <span>{12} min read</span>
+                {/* Excerpt */}
+                <div 
+                  className="text-gray-600 text-sm mb-4 line-clamp-3 prose prose-sm"
+                  dangerouslySetInnerHTML={{ 
+                    __html: article.excerpt || 
+                      (article.content 
+                        ? article.content.replace(/<[^>]*>?/gm, '').substring(0, 150) + 
+                          (article.content.length > 150 ? '...' : '')
+                        : '') 
+                  }} 
+                />
+
+                {/* Read More Link */}
+                <div className="mt-auto pt-4 border-t border-gray-100 flex items-center text-blue-600 group-hover:text-blue-700 transition-colors">
+                  <span className="text-sm font-medium">Read More</span>
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </div>
               </div>
             </Link>
-          </div>
-        </Card>
-      ))}
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
