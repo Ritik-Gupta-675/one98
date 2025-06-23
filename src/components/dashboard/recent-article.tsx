@@ -28,9 +28,21 @@ export function RecentArticles() {
     const fetchArticles = async () => {
       try {
         const response = await axios.get(`${env.API}/articles`);
-        setArticles(response.data);
+        // Handle different response formats
+        const articlesData = Array.isArray(response.data) 
+          ? response.data 
+          : (response.data?.data || []);
+        
+        if (!Array.isArray(articlesData)) {
+          console.error('Unexpected articles format:', articlesData);
+          setArticles([]);
+          return;
+        }
+        
+        setArticles(articlesData);
       } catch (error) {
         console.error("Failed to fetch articles", error);
+        setArticles([]);
       } finally {
         setLoading(false);
       }

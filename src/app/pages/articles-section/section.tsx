@@ -3,6 +3,14 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { env } from "@/config/env";
 
+// Function to strip HTML tags from content
+const stripHtml = (html: string) => {
+  if (typeof window === 'undefined') return '';
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+};
+
 interface Article {
   id: string;
   title: string;
@@ -107,97 +115,156 @@ const BlogSection: React.FC = () => {
   }
 
   return (
-    <section className="w-full px-4 sm:px-8 py-12 bg-white">
+    <section className="w-full px-4 sm:px-8 py-16 bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto">
         {/* Title and CTA */}
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            Latest Blog Posts
+        <div className="text-center mb-16">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            Latest <span className="text-blue-600">Articles</span>
           </h2>
-          <Link
-            to="/blogs"
-            className="text-blue-600 hover:text-blue-800 font-medium text-sm sm:text-base transition-colors"
-          >
-            View All →
-          </Link>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Discover our latest insights, stories, and expert opinions on various topics.
+          </p>
         </div>
 
         {/* Articles grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {articles.map((article) => (
-            <div key={article.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-              <div className="h-48 overflow-hidden">
-                <img
-                  src={article.imageUrl || '/images/placeholder-article.jpg'}
-                  alt={article.title}
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                />
-              </div>
-              <div className="p-6 flex-1 flex flex-col">
-                <div className="flex items-center text-sm text-gray-500 mb-2">
-                  <span>{new Date(article.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}</span>
-                  <span className="mx-2">•</span>
-                  <span>{article.category}</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {articles.map((article) => {
+            const plainTextContent = stripHtml(article.content);
+            const truncatedContent = plainTextContent.length > 120 
+              ? `${plainTextContent.substring(0, 120)}...` 
+              : plainTextContent;
+              
+            return (
+              <article key={article.id} className="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col h-full transform hover:-translate-y-1">
+                <div className="h-56 overflow-hidden bg-gray-100">
+                  
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
-                  <Link to={`/articles/${article.id}`}>
-                    {article.title}
-                  </Link>
-                </h3>
-                <p className="text-gray-600 text-sm line-clamp-3 mb-4">
-                  {article.content.substring(0, 150)}...
-                </p>
-                <div className="mt-auto flex items-center justify-between">
-                  <div className="flex items-center">
-                    {article.author?.imageUrl && (
-                      <img 
-                        src={article.author.imageUrl} 
-                        alt={article.author.name} 
-                        className="w-8 h-8 rounded-full mr-2"
-                      />
-                    )}
-                    <span className="text-sm text-gray-600">{article.author?.name || 'Anonymous'}</span>
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="flex items-center text-xs font-medium text-gray-500 mb-3">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                      {article.category || 'Uncategorized'}
+                    </span>
+                    <span className="mx-2">•</span>
+                    <time dateTime={new Date(article.createdAt).toISOString()}>
+                      {new Date(article.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </time>
                   </div>
-                  <Link 
-                    to={`/articles/${article.id}`}
-                    className="text-blue-600 font-medium text-sm hover:text-blue-700 transition-colors"
-                  >
-                    Read more →
-                  </Link>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 leading-snug">
+                    <Link 
+                      to={`/articles/${article.id}`}
+                      className="hover:text-blue-600 transition-colors duration-200"
+                    >
+                      {article.title}
+                    </Link>
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                    {truncatedContent}
+                  </p>
+                  <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
+                    <div className="flex items-center">
+                      {article.author?.imageUrl ? (
+                        <img 
+                          src={article.author.imageUrl} 
+                          alt={article.author.name} 
+                          className="w-8 h-8 rounded-full mr-3 object-cover"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-medium mr-3">
+                          {article.author?.name ? article.author.name.charAt(0).toUpperCase() : 'A'}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{article.author?.name || 'Anonymous'}</p>
+                        <p className="text-xs text-gray-500">Author</p>
+                      </div>
+                    </div>
+                    <Link 
+                      to={`/articles/${article.id}`}
+                      className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
+                      aria-label={`Read more about ${article.title}`}
+                    >
+                      Read more
+                      <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              </article>
+            );
+          })}
         </div>
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="mt-12 flex items-center justify-between">
-            <button
-              onClick={() => handlePageChange(pagination.currentPage - 1)}
-              disabled={!pagination.hasPreviousPage}
-              className={`px-4 py-2 rounded-md ${pagination.hasPreviousPage 
-                ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
-            >
-              Previous
-            </button>
-            <span className="text-sm text-gray-600">
-              Page {pagination.currentPage} of {pagination.totalPages}
-            </span>
-            <button
-              onClick={() => handlePageChange(pagination.currentPage + 1)}
-              disabled={!pagination.hasNextPage}
-              className={`px-4 py-2 rounded-md ${pagination.hasNextPage 
-                ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
-            >
-              Next
-            </button>
+          <div className="mt-16 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 pt-8">
+            <div className="text-sm text-gray-600 mb-4 sm:mb-0">
+              Showing page {pagination.currentPage} of {pagination.totalPages}
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                disabled={!pagination.hasPreviousPage}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  pagination.hasPreviousPage
+                    ? 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:text-blue-600'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
+                aria-label="Previous page"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </button>
+              
+              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                let pageNum;
+                if (pagination.totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (pagination.currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (pagination.currentPage >= pagination.totalPages - 2) {
+                  pageNum = pagination.totalPages - 4 + i;
+                } else {
+                  pageNum = pagination.currentPage - 2 + i;
+                }
+                
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`w-10 h-10 rounded-md text-sm font-medium transition-colors duration-200 ${
+                      pageNum === pagination.currentPage
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:text-blue-600'
+                    }`}
+                    aria-current={pageNum === pagination.currentPage ? 'page' : undefined}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              
+              <button
+                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                disabled={!pagination.hasNextPage}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  pagination.hasNextPage
+                    ? 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:text-blue-600'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
+                aria-label="Next page"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
           </div>
         )}
       </div>
