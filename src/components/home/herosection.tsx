@@ -5,64 +5,56 @@ import { FiBook, FiMail, FiPhone } from 'react-icons/fi';
 
 const HeroSection = () => {
   return (
-    <div className="relative w-full h-screen overflow-hidden">
-      <img 
-        className="absolute inset-0 w-full h-full object-cover z-0" 
-        src={banner} 
-        alt="Hero Background"
-      />
-      
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/40 z-10"></div>
-      
-      {/* Main Content */}
-      <div className="relative z-20 h-full flex flex-col justify-center px-4 md:px-12 lg:px-24 max-w-4xl">
-        <motion.h1 
-          className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-            One98 Edusolutions: <br /> Pioneering Education Excellence
-        </motion.h1>
-        
-        <motion.p 
-          className="text-white/90 text-lg md:text-xl mb-10 max-w-2xl leading-relaxed"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          Founded in 2016 in the educational hub of Kota, Rajasthan, One98
-          Edusolutions was established with a singular vision: to address and solve 
-          the pressing challenges faced by major coaching institutes.
-        </motion.p>
-        
-        <motion.div
-          className="flex flex-col sm:flex-row gap-6 items-start sm:items-center mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          <Button 
-            variant="solid"
-            size="lg"
-            startContent={<FiBook className="text-lg" />}
-            className="bg-amber-500 text-white font-medium px-8 py-6 rounded-none hover:bg-amber-600 transition-colors"
-          >
-            Learn More
-          </Button>
-        </motion.div>
-        
-        {/* Contact Info */}
-        <motion.div 
-          className="flex flex-col space-y-3 mb-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          <div className="flex items-center text-white/90">
-            <FiPhone className="mr-2" />
-            <span>+91 9773732347</span>
+   <div className="relative w-full h-[100vh] overflow-hidden">
+     <img className="absolute inset-0 w-full h-full  object-cover z-0" src={banner} alt="Hero Background "/> 
+        <div className="absolute inset-0 bg-black/5 flex flex-col-reverse justify-center items-start text-left px-2 md:px-2">
+          <div className="px-3 text-black md:px-12 max-w-2xl md:text-left">
+            <motion.h1 
+              className="text-2xl md:text-[34px] text-white font-bold mb-6 leading-tight max-w-2xl max mt-0"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              One98 Edusolutions: <br /> Pioneering Education Excellence
+            </motion.h1>
+            
+            <motion.p 
+              className="text-lg md:text-[15] text-blue-100 max-w-[15] mb-10"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              Founded in 2016 in the educational hub of Kota, Rajasthan, One98
+              Edusolutions was established with a singular vision: to 
+              addressand solve the pressing challenges faced by major coaching institutes. Since its inception,
+              One98 Edusolutions has dedicated itself to revolutionizing the educational landscape through innovative
+              and effective solutions tailored to the needs of our clients.
+            </motion.p>
+            
+            <motion.div
+            className="flex flex-col sm:flex-row gap-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              <Button 
+                variant="flat" 
+                size="lg"
+                className="text-white bg-amber-500 border-2 rounded border-amber-500 h-12 w-40 hover:bg-white/10 transition-colors">
+                Learn More
+              </Button>
+            </motion.div>
+            <motion.p 
+              className="text-lg md:text-[15] text-blue-100 max-w-[15] mb-10"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <div className="flex">
+              <div className="text-white text-100 text-[16px] px-3 mt-10 w-1/5 hover:text-yellow-300 inset-0" >  9773732347  </div>
+              <div className="text-white text-100 text-[16px] px-3 mt-10 pd-0 w-4/5 hover:text-yellow-300" >  one98solutions@gmail.com  </div>
+              </div>
+            </motion.p>
           </div>
           <div className="flex items-center text-white/90">
             <FiMail className="mr-2" />
