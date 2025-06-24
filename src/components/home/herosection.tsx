@@ -1,6 +1,8 @@
 import { Button } from "@nextui-org/button";
 import { motion } from 'framer-motion';
 import banner from '../../assets/banner.jpg';
+import { FiBook, FiMail, FiPhone } from 'react-icons/fi';
+
 const HeroSection = () => {
   return (
    <div className="relative w-full h-[100vh] overflow-hidden">
@@ -54,11 +56,15 @@ const HeroSection = () => {
               </div>
             </motion.p>
           </div>
+          <div className="flex items-center text-white/90">
+            <FiMail className="mr-2" />
+            <span>one98solutions@gmail.com</span>
+          </div>
+        </motion.div>
       </div>
-
-      {/* Decorative elements */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-blue-900/30 to-transparent"></div>
- </div>
+      
+      
+    </div>
   );
 };
 
