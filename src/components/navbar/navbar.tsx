@@ -1,18 +1,43 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
+  const toggleDropdown = (open: boolean) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setIsDropdownOpen(open);
   };
+
+  const handleMouseEnter = () => toggleDropdown(true);
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => toggleDropdown(false), 200);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        toggleDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -21,9 +46,9 @@ const Navbar = () => {
       name: 'Services', 
       path: '/services',
       dropdown: [
-        { name: 'Service 1', path: '/services/1' },
-        { name: 'Service 2', path: '/services/2' },
-        { name: 'Service 3', path: '/services/3' },
+        { name: 'Tech Service', path: '/tech-service/' },
+        { name: 'Content Services', path: '/content-services/' },
+        { name: 'Business Development Services', path: '/business-development-services/' },
       ]
     },
     { name: 'Contact', path: '/contact' },
@@ -37,7 +62,7 @@ const Navbar = () => {
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
             <Link to="/" className="flex items-center">
-              < img src={logo} alt="Logo" className="w-40 h-16" />
+              <img src={logo} alt="Logo" className="w-40 h-16" />
             </Link>
           </div>
 
@@ -47,49 +72,54 @@ const Navbar = () => {
               <div key={item.name} className="relative group">
                 {item.dropdown ? (
                   <div className="relative">
-                    <div className="flex items-center">
-                      <Link
-                        to={item.path}
-                        className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
-                      >
-                        {item.name}
-                      </Link>
-                      <button
-                        onClick={toggleDropdown}
-                        className="text-gray-700 hover:text-blue-600 px-1 py-2 rounded-md focus:outline-none"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
+                    <div 
+                      className="relative"
+                      ref={dropdownRef}
+                      onMouseEnter={handleMouseEnter}
+                      onMouseLeave={handleMouseLeave}
+                    >
+                      <div className="flex items-center">
+                        <Link
+                          to={item.path}
+                          className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium flex items-center"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                    {isDropdownOpen && (
-                      <div className="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                          {item.name}
+                          <svg
+                            className={`ml-1 h-4 w-4 transition-transform duration-200 ${isDropdownOpen ? 'transform rotate-180' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </Link>
+                      </div>
+                      <div 
+                        className={`absolute left-0 mt-1 w-56 rounded-lg shadow-xl bg-white ring-1 ring-gray-100 transition-all duration-200 ease-in-out transform origin-top ${isDropdownOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
+                      >
                         <div className="py-1">
                           {item.dropdown.map((subItem) => (
                             <Link
                               key={subItem.name}
                               to={subItem.path}
-                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              onClick={() => setIsDropdownOpen(false)}
+                              className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-150"
+                              onClick={() => {
+                                setIsDropdownOpen(false);
+                                setIsMenuOpen(false);
+                              }}
                             >
                               {subItem.name}
                             </Link>
                           ))}
                         </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 ) : (
                   <Link
@@ -159,45 +189,51 @@ const Navbar = () => {
               <div key={item.name}>
                 {item.dropdown ? (
                   <div>
-                    <button
-                      onClick={toggleDropdown}
-                      className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 flex justify-between items-center"
-                    >
-                      {item.name}
-                      <svg
-                        className={`ml-1 h-4 w-4 transform transition-transform ${
-                          isDropdownOpen ? 'rotate-180' : ''
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
+                    <div>
+                      <button
+                        onClick={() => toggleDropdown(!isDropdownOpen)}
+                        className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 flex justify-between items-center"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </button>
-                    {isDropdownOpen && (
-                      <div className="pl-4">
-                        {item.dropdown.map((subItem) => (
-                          <Link
-                            key={subItem.name}
-                            to={subItem.path}
-                            className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50"
-                            onClick={() => {
-                              setIsDropdownOpen(false);
-                              setIsMenuOpen(false);
-                            }}
-                          >
-                            {subItem.name}
-                          </Link>
-                        ))}
+                        {item.name}
+                        <svg
+                          className={`ml-1 h-4 w-4 transform transition-transform duration-200 ${
+                            isDropdownOpen ? 'rotate-180' : ''
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+                      <div 
+                        className={`overflow-hidden transition-all duration-200 ease-in-out ${
+                          isDropdownOpen ? 'max-h-40' : 'max-h-0'
+                        }`}
+                      >
+                        <div className="pl-4">
+                          {item.dropdown.map((subItem) => (
+                            <Link
+                              key={subItem.name}
+                              to={subItem.path}
+                              className="block px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-150"
+                              onClick={() => {
+                                setIsDropdownOpen(false);
+                                setIsMenuOpen(false);
+                              }}
+                            >
+                              {subItem.name}
+                            </Link>
+                          ))}
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
                 ) : (
                   <Link
