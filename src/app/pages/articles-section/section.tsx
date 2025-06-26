@@ -17,11 +17,12 @@ interface Article {
   slug: string;
   content: string;
   category: string;
-  imageUrl: string;
+  featuredImage?: string;
+  imageUrl?: string;
   createdAt: string;
   author: {
     name: string;
-    imageUrl: string;
+    imageUrl?: string;
   };
   _count: {
     comments: number;
@@ -54,9 +55,28 @@ const BlogSection: React.FC = () => {
   const fetchArticles = async (page: number = 1) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${env.API}/articles?page=${page}`);
-      setArticles(response.data.data);
-      setPagination(response.data.pagination);
+      const response = await axios.get(`${env.API}/articles`, {
+        params: {
+          page,
+          limit: 10,
+          sort: 'createdAt:desc'
+        }
+      });
+      
+      // Handle both array and object response formats
+      const articlesData = Array.isArray(response.data) 
+        ? response.data 
+        : response.data?.data || [];
+        
+      setArticles(articlesData);
+      setPagination(response.data.pagination || {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: articlesData.length,
+        itemsPerPage: 10,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      });
       setError(null);
     } catch (err) {
       console.error('Error fetching articles:', err);
@@ -138,7 +158,24 @@ const BlogSection: React.FC = () => {
             return (
               <article key={article.id} className="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col h-full transform hover:-translate-y-1">
                 <div className="h-56 overflow-hidden bg-gray-100">
-                  
+                  {article.featuredImage || article.imageUrl ? (
+                    <img 
+                      src={article.featuredImage || article.imageUrl} 
+                      alt={article.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        // Fallback to a placeholder if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://via.placeholder.com/800x450?text=No+Image';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                      <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                    </div>
+                  )}
                 </div>
                 <div className="p-6 flex-1 flex flex-col">
                   <div className="flex items-center text-xs font-medium text-gray-500 mb-3">

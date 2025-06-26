@@ -5,7 +5,7 @@ import Footer from './components/footer/footer';
 import Home from './app/pages/layout';
 import About from './app/pages/aboutus';
 import BlogSection from './app/pages/articles-section/section';
-import CreateArticlePage from './app/Dashboard/articles/create';
+import CreateArticlePage from './app/Dashboard/create';
 import Dashboard from './app/Dashboard/layout';
 import DashboardPage from './app/Dashboard/page';
 import Contact from './app/pages/contactus';
@@ -15,6 +15,7 @@ import ContentServicesPage from './app/pages/services/content-services';
 import BusinessServicesPage from './app/pages/services/business-services';
 import EditArticlePageWrapper from './components/articles/edit-article';
 import ArticlePage from './app/pages/articles-section/articles/article';
+import ManageArticlePage from './app/Dashboard/manage-article'
 // Layout component that includes Navbar and Footer
 const MainLayout = () => (
   <div className="min-h-screen flex flex-col">
@@ -52,6 +53,7 @@ function App() {
           {/* Dashboard routes without Navbar/Footer */}
           <Route path="/dashboard" element={<Dashboard><DashboardPage /></Dashboard>} />
           <Route path="/dashboard/articles/create" element={<Dashboard><CreateArticlePage /></Dashboard>} />
+          <Route path="/dashboard/articles/manage" element={<Dashboard><ManageArticlePage /></Dashboard>} />
           <Route path="/dashboard/articles/edit/:id" element={<Dashboard><EditArticlePageWrapper /></Dashboard>} />
           {/* <Route path="/dashboard/admin-login" element={<AdminLogin />} /> */}
         </Routes>

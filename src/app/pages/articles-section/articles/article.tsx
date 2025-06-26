@@ -250,7 +250,7 @@ export default function BlogPage() {
             {/* Sidebar */}
             <aside className="lg:col-span-4 space-y-6 sticky top-6 self-start">
               {/* Table of Contents */}
-              <div className="bg-white p-6 rounded-xl shadow-md">
+              <div className="bg-white  rounded-xl shadow-md">
                 <TableOfContents content={content} />
               </div>
               
