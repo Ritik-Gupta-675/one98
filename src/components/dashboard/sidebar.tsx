@@ -23,8 +23,8 @@ const navItems = [
     icon: FileText,
   },
   {
-    name: "Edit Articles",
-    href: "/dashboard/articles/edit",
+    name: "Manage Articles",
+    href: "/dashboard/articles/manage",
     icon: FileText,
   },
   {
