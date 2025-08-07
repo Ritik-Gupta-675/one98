@@ -1,317 +1,560 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+"use client";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import TiptapEditor from "@/components/ui/tiptapeditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import TiptapEditor from "@/components/ui/tiptapeditor";
-import axios from "axios";
-import { env } from "../../config/env";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Alert } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { TagInput } from "@/components/ui/tag-input";
 
-export interface Article {
-  id?: string;
-  title: string;
-  content: string;
-  category: string;
-  featuredImage?: string;
-  authorId?: string;
-}
+const articleSchema = z.object({
+  title: z.string(),
+  content: z.string(),
+  imageUrl: z.string(), // Will store stringified array
+  tags: z.array(z.string()).optional(),
+  category: z.array(z.string()).optional(),
+  metaTitle: z.string().optional(),
+  metaDescription: z.string().optional(),
+  metaKeywords: z.string().optional(),
+  robots: z.string().optional(),
+  ogTitle: z.string().optional(),
+  ogDescription: z.string().optional(),
+  ogImage: z.string().optional(),
+  ogType: z.string().optional(),
+  twitterCard: z.string().optional(),
+  twitterTitle: z.string().optional(),
+  twitterDescription: z.string().optional(),
+  twitterImage: z.string().optional(),
+  canonicalUrl: z.string().optional(),
+  schemaData: z.string().optional(),
+  header: z.string().optional(),
+  body: z.string().optional(),
+  showInNav: z.boolean().default(false),
+  questionNumber: z.number().optional(),
+  FAQ: z.string().optional(),
+});
+
+type ArticleFormData = z.infer<typeof articleSchema>;
 
 interface ArticleFormProps {
-  isEditMode?: boolean;
-  initialArticle?: Article;
-  onSuccess?: () => void;
+  initialData?: ArticleFormData;
+  onSubmit: (data: ArticleFormData) => void;
 }
 
-interface FormErrors {
-  title?: string;
-  category?: string;
-  content?: string;
-  featuredImage?: string;
-  formErrors?: string;
-}
-
-export function ArticleForm({ isEditMode = false, initialArticle, onSuccess }: ArticleFormProps) {
-  const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
-  
-  const [title, setTitle] = useState<string>(initialArticle?.title || "");
-  const [category, setCategory] = useState<string>(initialArticle?.category || "");
-  const [content, setContent] = useState<string>(initialArticle?.content || "");
-  const [featuredImage, setFeaturedImage] = useState<File | null>(null);
-  const [existingImageUrl, setExistingImageUrl] = useState<string>(initialArticle?.featuredImage || "");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isLoading, setIsLoading] = useState(isEditMode && !initialArticle);
-
-  // Fetch article data if in edit mode and no initialArticle is provided
-  useEffect(() => {
-    const fetchArticle = async () => {
-      if (!isEditMode || !id || initialArticle) return;
-      
-      try {
-        setIsLoading(true);
-        const response = await axios.get(`${env.API}/articles/${id}`);
-        const data = response.data;
-        setTitle(data.title);
-        setCategory(data.category);
-        setContent(data.content);
-        setExistingImageUrl(data.featuredImage || "");
-      } catch (error) {
-        console.error('Error fetching article:', error);
-        setErrors({ formErrors: 'Failed to load article' });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchArticle();
-  }, [id, isEditMode, initialArticle]);
-
-  const validateForm = (): boolean => {
-    const validationErrors: FormErrors = {};
-    if (!title.trim()) validationErrors.title = "Title is required";
-    if (!category) validationErrors.category = "Category is required";
-    if (!content.trim()) validationErrors.content = "Content is required";
-
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return false;
+export const ArticleForm: React.FC<ArticleFormProps> = ({
+  initialData,
+  onSubmit,
+}) => {
+  const parseImageUrl = (url: string | undefined): [string, string] => {
+    try {
+      return JSON.parse(url || "[]") as [string, string];
+    } catch (error) {
+      return ["", ""];
     }
-    return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const getImageUrl = (url: string | undefined): string => {
+    const [imageUrl] = parseImageUrl(url);
+    return imageUrl;
+  };
+
+  const getImageAlt = (url: string | undefined): string => {
+    const [, altText] = parseImageUrl(url);
+    return altText;
+  };
+
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    initialData?.imageUrl ? getImageUrl(initialData.imageUrl) : null
+  );
+  const [isUploading, setIsUploading] = useState(false);
+  const [alert, setAlert] = useState<{
+    message: string;
+    type: "error" | "success" | "warning";
+  } | null>(null);
+
+  const form = useForm<ArticleFormData>({
+    resolver: (values) => {
+      let errors = {};
+      const messages = [];
+
+      if (!values.title || values.title.length < 2) {
+        messages.push("Title must be at least 2 characters");
+        errors = {
+          ...errors,
+          title: { message: "" },
+        };
+      }
+
+      if (!values.content || values.content.length < 10) {
+        messages.push("Content must be at least 10 characters");
+        errors = {
+          ...errors,
+          content: { message: "" },
+        };
+      }
+
+      if (!values.imageUrl || !getImageUrl(values.imageUrl)) {
+        messages.push("Image is required");
+        errors = {
+          ...errors,
+          imageUrl: "Image URL is required",
+        };
+      }
+
+      if (messages.length > 0) {
+        setAlert({
+          message: `Please fix the following:\n• ${messages.join("\n• ")}`,
+          type: "error",
+        });
+        return { values: {}, errors };
+      }
+
+      setAlert(null);
+      return { values, errors: {} };
+    },
+    defaultValues: {
+      ...initialData,
+      category: initialData?.category || [],
+    },
+  });
+
+  const handleSubmitForm = (data: ArticleFormData) => {
+    const transformedData = {
+      ...data,
+      category: data.category?.filter(Boolean) as string[],
+    };
+
+    onSubmit(transformedData);
+  };
+
+  const handleEditorChange = (content: string) => {
+    form.setValue("content", content, { shouldValidate: true });
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
+    const file = e.target.files?.[0];
     
-    if (!validateForm()) {
+    if (!file) return;
+
+    // Check file type
+    if (!file.type.match('image.*')) {
+      setAlert({
+        message: 'Please upload an image file (JPEG, PNG, etc.)',
+        type: 'error'
+      });
       return;
     }
-    
-    setIsSubmitting(true);
-    setErrors({});
 
-    try {
-      let imageUrl = existingImageUrl;
-
-      // Upload new image if provided
-      if (featuredImage) {
-        const imageFormData = new FormData();
-        imageFormData.append('featuredImage', featuredImage);
-        
-        const uploadRes = await axios.post(env.API + '/upload', imageFormData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        imageUrl = uploadRes.data.url;
-      }
-
-      // Prepare article data
-      const articleData = {
-        title,
-        category,
-        content,
-        imageUrl,
-        ...(!isEditMode && { authorId: "1" }) // Only include authorId for new articles
-      };
-
-      // Create or update article
-      if (isEditMode && id) {
-        await axios.put(`${env.API}/articles/${id}`, articleData);
-        alert("Article updated successfully!");
-      } else {
-        await axios.post(env.API + '/articles', articleData, {
-          headers: { 'Content-Type': 'application/json' },
-        });
-        alert("Article created successfully!");
-      }
-
-      // Handle success
-      if (onSuccess) {
-        onSuccess();
-      } else if (isEditMode) {
-        navigate("/admin/articles");
-      } else {
-        // Reset form for new article
-        setTitle("");
-        setCategory("");
-        setContent("");
-        setFeaturedImage(null);
-        setExistingImageUrl("");
-      }
-    } catch (error) {
-      console.error(`Failed to ${isEditMode ? 'update' : 'create'} article:`, error);
-      setErrors({
-        formErrors: `Failed to ${isEditMode ? 'update' : 'create'} article. Please try again.`,
+    // Check file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setAlert({
+        message: 'Image size should be less than 5MB',
+        type: 'error'
       });
-    } finally {
-      setIsSubmitting(false);
+      return;
     }
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    
+    reader.onloadend = async () => {
+      try {
+        // Show preview
+        const result = reader.result as string;
+        setImagePreview(result);
+
+        // Upload to server
+        const formData = new FormData();
+        formData.append('featuredImage', file);
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/upload`, {
+          method: 'POST',
+          body: formData,
+          // Don't set Content-Type header, let the browser set it with the correct boundary
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to upload image');
+        }
+
+        const data = await response.json();
+        
+        // Update form with the new image URL
+        form.setValue('imageUrl', JSON.stringify([data.url, '']), {
+          shouldValidate: true,
+        });
+        
+        setAlert({
+          message: 'Image uploaded successfully',
+          type: 'success'
+        });
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        setAlert({
+          message: 'Failed to upload image. Please try again.',
+          type: 'error'
+        });
+      } finally {
+        setIsUploading(false);
+      }
+    };
+
+    reader.readAsDataURL(file);
   };
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>;
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center py-8">
-      <Card className="w-full max-w-3xl rounded-2xl shadow-2xl border border-blue-200/60 bg-white/95 backdrop-blur-md">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-3xl font-bold text-blue-900 drop-shadow-sm">
-            {isEditMode ? 'Edit Article' : 'Create New Article'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {errors.formErrors && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-300 text-red-700 rounded-lg text-base font-medium">
-              {errors.formErrors}
-            </div>
-          )}
+    <div className="relative">
+      {alert && (
+        <Alert
+          message={alert.message}
+          type={alert.type}
+          onClose={() => setAlert(null)}
+        />
+      )}
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(handleSubmitForm)}
+          className="space-y-8"
+        >
+          {/* Title */}
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Title <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input {...field} className="border-[var(--admin-border)]" />
+                </FormControl>
+              </FormItem>
+            )}
+          />
 
-          <form onSubmit={handleSubmit} className="space-y-7">
-            <div className="space-y-2">
-              <Label htmlFor="title" className="text-blue-800 font-semibold">Article Title</Label>
-              <Input
-                id="title"
-                name="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter article title"
-                className={`rounded-lg border-2 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-blue-50/60 ${errors.title ? "border-red-400" : "border-blue-200"}`}
-              />
-              {errors.title && (
-                <p className="text-sm text-red-500 font-medium">{errors.title}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="category" className="text-blue-800 font-semibold">Category</Label>
-              <select
-                id="category"
-                name="category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className={`flex h-11 w-full rounded-lg border-2 px-3 py-2 text-base bg-blue-50/60 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${errors.category ? "border-red-400" : "border-blue-200"}`}
-              >
-                <option value="">Select Category</option>
-                <option value="technology">Technology</option>
-                <option value="programming">Programming</option>
-                <option value="web-development">Web Development</option>
-              </select>
-              {errors.category && (
-                <p className="text-sm text-red-500 font-medium">{errors.category}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="featuredImage" className="text-blue-800 font-semibold">Featured Image</Label>
-              {existingImageUrl && (
-                <div className="mb-2">
-                  <p className="text-sm text-gray-500 mb-1">Current Image:</p>
-                  <img 
-                    src={existingImageUrl} 
-                    alt="Current featured" 
-                    className="h-32 object-cover rounded-lg border border-gray-200"
+          {/* Image Upload */}
+          <FormField
+            control={form.control}
+            name="imageUrl"
+            render={({ field }) => (
+              <div className="space-y-4">
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="imageUrl"
+                    render={({ field: altField }) => (
+                      <FormItem>
+                        <FormLabel>Featured Image</FormLabel>
+                        <FormControl>
+                          <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageChange}
+                                disabled={isUploading}
+                                className="border-[var(--admin-border)] cursor-pointer flex-1"
+                              />
+                            </div>
+                            
+                            {isUploading && (
+                              <div className="flex items-center text-sm text-gray-500">
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mr-2"></div>
+                                Uploading image...
+                              </div>
+                            )}
+                            
+                            <Input
+                              placeholder="Image alt text"
+                              value={getImageAlt(altField.value || '')}
+                              onChange={(e) => {
+                                const [imageUrl] = parseImageUrl(altField.value || '');
+                                altField.onChange(
+                                  JSON.stringify([imageUrl, e.target.value])
+                                );
+                              }}
+                              className="mt-2"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
-              )}
-              <Input
-                id="featuredImage"
-                name="featuredImage"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  setFeaturedImage(file);
-                  // Clear the error if file is selected
-                  if (file && errors.featuredImage) {
-                    setErrors(prev => ({ ...prev, featuredImage: undefined }));
-                  }
-                }}
-                className={`rounded-lg border-2 bg-blue-50/60 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${errors.featuredImage ? "border-red-400" : "border-blue-200"}`}
-              />
-              {errors.featuredImage && (
-                <p className="text-sm text-red-500 font-medium">{errors.featuredImage}</p>
-              )}
-            </div>
 
-            <div className="space-y-2">
-              <Label className="text-blue-800 font-semibold">Content</Label>
-              <div
-                className={`rounded-lg border-2 bg-blue-50/60 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 ${errors.content ? "border-red-400" : "border-blue-200"}`}
-              >
-                <TiptapEditor
-                  content={content}
-                  onChange={(html) => {
-                    setContent(html);
-                    if (errors.content) {
-                      setErrors((prev) => ({ ...prev, content: undefined }));
-                    }
-                  }}
+                {imagePreview ? (
+                  <div className="space-y-2">
+                    <div className="mt-4 relative w-full h-48 rounded-lg overflow-hidden border border-[var(--admin-border)]">
+                      <img
+                        src={imagePreview}
+                        alt={getImageAlt(form.getValues('imageUrl')) || 'Preview'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <p className="text-sm text-green-500">
+                      Image ready to be saved with your article
+                    </p>
+                  </div>
+                ) : initialData?.imageUrl ? (
+                  <div className="space-y-2">
+                    <div className="mt-4 relative w-full h-48 rounded-lg overflow-hidden border border-[var(--admin-border)]">
+                      <img
+                        src={getImageUrl(initialData.imageUrl)}
+                        alt={getImageAlt(initialData.imageUrl) || 'Current article image'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <p className="text-sm text-gray-500">Current article image</p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg">
+                    <p className="text-sm text-gray-500">No image selected</p>
+                  </div>
+                )}
+              </div>
+            )}
+          />
+
+          {/* Main Content */}
+          <FormField
+            control={form.control}
+            name="content"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Main Content <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <TiptapEditor
+                    content={field.value}
+                    onChange={handleEditorChange}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          {/* Tags */}
+          <FormField
+            control={form.control}
+            name="tags"
+            render={({ field: { onChange, value, ...field } }) => (
+              <FormItem>
+                <FormLabel>Tags</FormLabel>
+                <FormControl>
+                  <TagInput
+                    value={value || []}
+                    onChange={onChange}
+                    placeholder="Add tags..."
+                    className="w-full"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Metadata */}
+          <div className="grid  gap-6">
+            <FormField
+              control={form.control}
+              name="metaTitle"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Meta Title</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="metaDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Meta Description</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="metaKeywords"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Meta Keywords</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="robots"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Robots</FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value || "index,follow"}
+                      onValueChange={(value) => field.onChange(value)}
+                      defaultValue="index,follow"
+                    >
+                      <SelectTrigger className="text-white">
+                        <SelectValue placeholder="noindex, nofollow" />
+                      </SelectTrigger>
+                      <SelectContent className="text-white max-h-60 overflow-y-auto">
+                        <SelectItem value="index,follow">
+                          Index & Follow (Default)
+                        </SelectItem>
+                        <SelectItem value="noindex,follow">
+                          No Index, Follow
+                        </SelectItem>
+                        <SelectItem value="index,nofollow">
+                          Index, No Follow
+                        </SelectItem>
+                        <SelectItem value="noindex,nofollow">
+                          No Index & No Follow
+                        </SelectItem>
+                        <SelectItem value="noarchive">No Archive</SelectItem>
+                        <SelectItem value="nosnippet">No Snippet</SelectItem>
+                        <SelectItem value="data-nosnippet">
+                          Data No Snippet
+                        </SelectItem>
+                        <SelectItem value="max-snippet:0">
+                          Max Snippet: None
+                        </SelectItem>
+                        <SelectItem value="max-snippet:-1">
+                          Max Snippet: Unlimited
+                        </SelectItem>
+                        <SelectItem value="max-snippet:50">
+                          Max Snippet: 50 Characters
+                        </SelectItem>
+                        <SelectItem value="noimageindex">
+                          No Image Index
+                        </SelectItem>
+                        <SelectItem value="nocache">No Cache</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="all">All</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="canonicalUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Canonical URL</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="schemaData"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Schema Data</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="header"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Header</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="body"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Body</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            {/* FAQ Editor Section */}
+            {/* <div className="space-y-4">
+              <div>
+                <Label>FAQs</Label>
+                <FormField
+                  control={form.control}
+                  name="FAQ"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <FAQEditor
+                          value={field.value}
+                          onChange={(value) => field.onChange(value)}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Add frequently asked questions in a structured format.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-              {errors.content && (
-                <p className="text-sm text-red-500 font-medium">{errors.content}</p>
-              )}
-            </div>
+            </div> */}
+          </div>
 
-            <div className="flex justify-end gap-4 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                className="rounded-lg border-blue-300 text-blue-700 hover:bg-blue-50"
-                onClick={() => {
-                  if (isEditMode) {
-                    navigate(-1); // Go back
-                  } else {
-                    // Reset form
-                    setTitle("");
-                    setCategory("");
-                    setContent("");
-                    setFeaturedImage(null);
-                    setExistingImageUrl("");
-                  }
-                }}
-                disabled={isSubmitting}
-              >
-                {isEditMode ? 'Cancel' : 'Reset'}
-              </Button>
-              <Button
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-6 py-2 font-medium transition-colors"
-                disabled={isSubmitting}
-              >
-                {isSubmitting 
-                  ? (isEditMode ? 'Updating...' : 'Creating...') 
-                  : (isEditMode ? 'Update Article' : 'Create Article')}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          <Button
+            disabled={isUploading}
+            type="submit"
+            className="mt-6 bg-slate-700 hover:bg-slate-800 text-white"
+          >
+            {isUploading ? "Uploading..." : "Save"}
+          </Button>
+        </form>
+      </Form>
     </div>
   );
-}
-
-// Wrapper component for edit route
-export const EditArticlePageWrapper = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  
-  const handleSuccess = () => {
-    navigate('/admin/articles');
-  };
-  
-  if (!id) {
-    return <div>No article ID provided</div>;
-  }
-  
-  return (
-    <ArticleForm 
-      isEditMode={true} 
-      onSuccess={handleSuccess}
-    />
-  );
 };
-
-// Default export for create page
-export default ArticleForm;
